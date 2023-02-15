@@ -20,7 +20,7 @@ if not os.path.exists('experiment/evaluation'):
 if not os.path.exists('experiment/evaluation'):
     os.makedirs('experiment/training')
 
-BASE_PATH = "G:/AIP/Malaria-Detection"
+BASE_PATH = "D:/research_projects/malaria_detection/Malaria-Detection-Using-Faster-RCNN/"
 TRAIN_ANNOT_PATH = os.path.sep.join([BASE_PATH,"annotated_data/train_annotation.csv"])#train csv path
 TEST_ANNOT_PATH = os.path.sep.join([BASE_PATH,"annotated_data/test_annotation.csv"])#test csv path
 TRAIN_RECORD = os.path.sep.join([BASE_PATH,"output/records/training.record"])#record file required by Tensorflow object detection
@@ -49,7 +49,7 @@ for row in tqdm(train_rows[1:]):
     (endX,endY) = (float(endX),float(endY))
     if label not in CLASSES:
         continue
-    p = os.path.sep.join([BASE_PATH,'input/'+imagePath])
+    p = os.path.sep.join([BASE_PATH,'annotated_data/'+imagePath])
     b = D.get(p,[])
     b.append((label,(startX,startY,endX,endY)))
     D[p] = b
@@ -60,11 +60,11 @@ datasets = [
     ("test",testKeys,TEST_RECORD)
 ]
 for dType,keys,outputPath in datasets:
-    print("processing{}".format(dType))
-    writer = tf.python_io.TFRecordWriter(outputPath)
+    print("processing {}".format(dType))
+    writer = tf.io.TFRecordWriter(outputPath)
     total = 0
     for k in tqdm(keys):
-        encoded = tf.gfile.GFile(k,'rb').read()
+        encoded = tf.io.gfile.GFile(k,'rb').read()
         encoded = bytes(encoded)
         pilImage = Image.open(k)
         (w,h) = pilImage.size[:2]

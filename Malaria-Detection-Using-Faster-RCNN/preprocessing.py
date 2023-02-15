@@ -7,10 +7,11 @@ import json
 from collections import defaultdict
 from tqdm import tqdm
 from imutils import paths 
+import shutil
 
 # reading training json file and creating a dataframe for bounding boxes and image paths
-print("creating training annotated data...")
-train = pd.read_json ('input/training.json')
+print("Creating training annotated data...")
+train = pd.read_json ('../data/malaria_bbbc_80k/malaria/training.json')
 data = []
 for i in tqdm(range(train.shape[0])):
     for j in range(len(train.iloc[i,1])):
@@ -22,6 +23,9 @@ for i in tqdm(range(train.shape[0])):
         y_max = train.iloc[i,1][j]['bounding_box']['maximum']['r']
         
         data.append([img_name,label,x_min,y_min,x_max,y_max])
+
+        shutil.copy("../data/malaria_bbbc_80k/malaria/images/{}".format(img_name),
+                    './annotated_data/training_images/{}'.format(img_name))
 
 df_train = pd.DataFrame(data,columns=['img_name','label','x_min','y_min','x_max','y_max'])
 
@@ -40,7 +44,7 @@ for i in range(df_train.shape[0]):
 
 # reading testing json file and creating a dataframe for bounding boxes and image paths
 print("creating testing annotated data...")
-test = pd.read_json ('input/test.json')
+test = pd.read_json ('../data/malaria_bbbc_80k/malaria/test.json')
 
 data = []
 for i in tqdm(range(test.shape[0])):
@@ -53,6 +57,8 @@ for i in tqdm(range(test.shape[0])):
         y_max = test.iloc[i,1][j]['bounding_box']['maximum']['r']
         
         data.append([img_name,label,x_min,y_min,x_max,y_max])
+        shutil.copy("../data/malaria_bbbc_80k/malaria/images/{}".format(img_name),
+                    './annotated_data/testing_images/{}'.format(img_name))
 
 df_test = pd.DataFrame(data,columns = ['img_name','label','x_min','y_min','x_max','y_max'])
 

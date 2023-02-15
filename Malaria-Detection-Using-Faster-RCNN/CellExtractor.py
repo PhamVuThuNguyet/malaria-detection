@@ -7,7 +7,7 @@ from tqdm import tqdm
 import matplotlib.image as mpimg
 from PIL import Image
 
-train = pd.read_json('input/training.json')
+train = pd.read_json('../data/malaria_bbbc_80k/malaria/training.json')
 
 print("Creating Dataframe with Bounding Boxes of Training Data...")
 data = []
@@ -27,7 +27,7 @@ df_train = pd.DataFrame(data,columns=['img_name','label','x_min','y_min','x_max'
 #creating dataframe of all non-rbc cells
 df_non_rbc=df_train[(df_train.label!='red blood cell') & (df_train.label!='difficult')]
 
-df_non_rbc.img_name = df_non_rbc.img_name.apply(lambda x: "input/training_images/"+str(x))
+df_non_rbc.img_name = df_non_rbc.img_name.apply(lambda x: "annotated_data/training_images/"+str(x))
 df_non_rbc.reset_index(drop=True,inplace=True)
 
 if not os.path.exists('output/cell_images'):

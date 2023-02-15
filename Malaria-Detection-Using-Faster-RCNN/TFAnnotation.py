@@ -1,9 +1,9 @@
 import os
-from object_detection.utils.dataset_util import bytes_list_feature
-from object_detection.utils.dataset_util import float_list_feature
-from object_detection.utils.dataset_util import int64_list_feature
-from object_detection.utils.dataset_util import int64_feature
-from object_detection.utils.dataset_util import bytes_feature
+from models.research.object_detection.utils.dataset_util import bytes_list_feature
+from models.research.object_detection.utils.dataset_util import float_list_feature
+from models.research.object_detection.utils.dataset_util import int64_list_feature
+from models.research.object_detection.utils.dataset_util import int64_feature
+from models.research.object_detection.utils.dataset_util import bytes_feature
 
 #Ref- https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html
 class TFAnnotation:
