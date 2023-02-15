@@ -41,7 +41,7 @@ def get_data(input_path):
 				all_imgs[filename]['bboxes'] = []
 				all_imgs[filename]['imageset'] = 'test'
 
-			all_imgs[filename]['bboxes'].append({'class': class_name, 'x1': int(x1), 'x2': int(x2), 'y1': int(y1), 'y2': int(y2)})
+			all_imgs[filename]['bboxes'].append({'class': class_name, 'x1': int(float(x1)), 'x2': int(float(x2)), 'y1': int(float(y1)), 'y2': int(float(y2))})
 
 
 		all_data = []

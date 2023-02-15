@@ -1,4 +1,4 @@
-from keras.engine.topology import Layer
+from keras.layers import Layer
 import keras.backend as K
 
 if K.backend() == 'tensorflow':
