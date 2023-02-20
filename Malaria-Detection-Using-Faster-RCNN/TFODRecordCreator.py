@@ -20,6 +20,53 @@ if not os.path.exists('experiment/evaluation'):
 if not os.path.exists('experiment/evaluation'):
     os.makedirs('experiment/training')
 
+<<<<<<< HEAD
+BASE_PATH = "D:/pythonProject/malaria_detection/Malaria-Detection-Using-Faster-RCNN/"
+TRAIN_ANNOT_PATH = os.path.sep.join(
+    [BASE_PATH, "annotated_data/train_annotation.csv"])  # train csv path
+TEST_ANNOT_PATH = os.path.sep.join(
+    [BASE_PATH, "annotated_data/test_annotation.csv"])  # test csv path
+# record file required by Tensorflow object detection
+TRAIN_RECORD = os.path.sep.join([BASE_PATH, "output/records/training.record"])
+TEST_RECORD = os.path.sep.join([BASE_PATH, "output/records/testing.record"])
+# class file required by Tensorflow object detection
+CLASSES_FILE = os.path.sep.join([BASE_PATH, "output/records/classes.pbtxt"])
+CLASSES = {"red blood cell": 1, "non_rbc": 2}
+
+# creating class file required by TFOD
+f = open(CLASSES_FILE, "w+")
+for (k, v) in CLASSES.items():
+    item = ("item {\n"
+            "\tid: " + str(v) + "\n"
+            "\tname: '" + k + "'\n"
+            "}\n")
+    f.write(item)
+f.close()
+
+D = {}
+train_rows = open(TRAIN_ANNOT_PATH).read().strip().split("\n")
+
+# creating the required .record file for TFOD
+for row in tqdm(train_rows[1:]):
+    row = row.split(',')
+    (imagePath, label, startX, startY, endX, endY) = row
+    (startX, startY) = (float(startX), float(startY))
+    (endX, endY) = (float(endX), float(endY))
+    if label not in CLASSES:
+        continue
+    p = os.path.sep.join([BASE_PATH, 'annotated_data/'+imagePath])
+    b = D.get(p, [])
+    b.append((label, (startX, startY, endX, endY)))
+    D[p] = b
+
+(trainKeys, testKeys) = train_test_split(
+    list(D.keys()), test_size=.10, random_state=42)
+datasets = [
+    ("train", trainKeys, TRAIN_RECORD),
+    ("test", testKeys, TEST_RECORD)
+]
+for dType, keys, outputPath in datasets:
+=======
 BASE_PATH = "D:/research_projects/malaria_detection/Malaria-Detection-Using-Faster-RCNN/"
 TRAIN_ANNOT_PATH = os.path.sep.join([BASE_PATH,"annotated_data/train_annotation.csv"])#train csv path
 TEST_ANNOT_PATH = os.path.sep.join([BASE_PATH,"annotated_data/test_annotation.csv"])#test csv path
@@ -60,16 +107,26 @@ datasets = [
     ("test",testKeys,TEST_RECORD)
 ]
 for dType,keys,outputPath in datasets:
+>>>>>>> master
     print("processing {}".format(dType))
     writer = tf.io.TFRecordWriter(outputPath)
     total = 0
     for k in tqdm(keys):
+<<<<<<< HEAD
+        encoded = tf.io.gfile.GFile(k, 'rb').read()
+        encoded = bytes(encoded)
+        pilImage = Image.open(k)
+        (w, h) = pilImage.size[:2]
+        filename = k.split(os.path.sep)[-1]
+        encoding = filename[filename.rfind(".") + 1:]
+=======
         encoded = tf.io.gfile.GFile(k,'rb').read()
         encoded = bytes(encoded)
         pilImage = Image.open(k)
         (w,h) = pilImage.size[:2]
         filename = k.split(os.path.sep)[-1]
         encoding = filename[filename.rfind(".")+ 1:]
+>>>>>>> master
 
         tfAnnot = TFAnnotation()
         tfAnnot.image = encoded
@@ -77,7 +134,11 @@ for dType,keys,outputPath in datasets:
         tfAnnot.filename = filename
         tfAnnot.width = w
         tfAnnot.height = h
+<<<<<<< HEAD
+        for (label, (startX, startY, endX, endY)) in D[k]:
+=======
         for (label,(startX,startY,endX,endY)) in D[k]:
+>>>>>>> master
             xMin = startX/w
             xMax = endX/w
             yMin = startY/h
@@ -90,10 +151,18 @@ for dType,keys,outputPath in datasets:
             tfAnnot.classes.append(CLASSES[label])
             tfAnnot.difficult.append(0)
             total += 1
+<<<<<<< HEAD
+
+=======
         
+>>>>>>> master
         features = tf.train.Features(feature=tfAnnot.build())
         example = tf.train.Example(features=features)
 
         writer.write(example.SerializeToString())
     writer.close()
+<<<<<<< HEAD
+    print('{} saved {}'.format(total, dType))
+=======
     print('{} saved {}'.format(total,dType))
+>>>>>>> master

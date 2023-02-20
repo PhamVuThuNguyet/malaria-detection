@@ -1,0 +1,17 @@
+# created by virtualenv automatically
+.idea
+data
+Lib
+Malaria-Detection-Using-Faster-Rcnn/annotated_data/testing_images
+Malaria-Detection-Using-Faster-Rcnn/annotated_data/training_images
+nvvm
+Malaria-Detection-Using-Faster-Rcnn/output/cell_images
+Malaria-Detection-Using-Faster-Rcnn/output/cell_images_test
+Scripts
+share
+Malaria-Detection-Using-Faster-Rcnn/models
+Malaria-Detection-Using-Faster-Rcnn/experiment/
+Malaria-Detection-Using-Faster-Rcnn/output/records
+Malaria-Detection-Using-Faster-Rcnn/output/models/checkpoint
+Malaria-Detection-Using-Faster-Rcnn/output/models/saved_model/variables
+Malaria-Detection-Using-Faster-Rcnn/annotated_data

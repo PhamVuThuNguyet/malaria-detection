@@ -19,7 +19,11 @@ import imutils
 import cv2
 from PIL import Image
 
+<<<<<<< HEAD
+test=pd.read_json ('../data/malaria_bbbc_80k/malaria/test.json')
+=======
 test=pd.read_json ('input/test.json')
+>>>>>>> master
 
 data=[]
 for i in tqdm(range(test.shape[0])):
@@ -40,7 +44,11 @@ for i in range(df_test.shape[0]):
     if df_test.iloc[i,1] in non_rbc:
         df_test.iloc[i,1]='non_rbc'
 
+<<<<<<< HEAD
+df_test.img_name=df_test.img_name.apply(lambda x: "annotated_data/testing_images/"+str(x))
+=======
 df_test.img_name=df_test.img_name.apply(lambda x: "input/testing_images/"+str(x))
+>>>>>>> master
 df_test_two=df_test[df_test['label']!="difficult"]
 
 data=[]
@@ -60,7 +68,11 @@ df_test_all=df_test[df_test['label']!="difficult"]
 
 testing_images=np.unique(df_test_two.img_name.values)
 
+<<<<<<< HEAD
+modelPath = "output/models/saved_model/saved_model.pb" #saved Faster-RCNN model graph
+=======
 modelPath = "output/models/frozen_inference_graph.pb" #saved Faster-RCNN model graph
+>>>>>>> master
 labels_loc = "output/records/classes.pbtxt" #saved classes files
 min_confidence = 0.5
 num_classes = 2
