@@ -1,9 +1,12 @@
 import pandas as pd
+
 from tqdm import tqdm
+
 import shutil
 
 # reading training json file and creating a dataframe for bounding boxes and image paths
 print("Creating training annotated data...")
+
 train = pd.read_json('../data/malaria_bbbc_80k/malaria/training.json')
 data = []
 for i in tqdm(range(train.shape[0])):
@@ -16,6 +19,7 @@ for i in tqdm(range(train.shape[0])):
         y_max = train.iloc[i, 1][j]['bounding_box']['maximum']['r']
 
         data.append([img_name, label, x_min, y_min, x_max, y_max])
+
 
         shutil.copy("../data/malaria_bbbc_80k/malaria/images/{}".format(img_name),
                     './annotated_data/training_images/{}'.format(img_name))
@@ -73,3 +77,4 @@ for i in range(df_test.shape[0]):
 # saving annotated training and test csv
 df_train.to_csv('annotated_data/train_annotation.csv', index=False)
 df_test.to_csv('annotated_data/test_annotation.csv', index=False)
+

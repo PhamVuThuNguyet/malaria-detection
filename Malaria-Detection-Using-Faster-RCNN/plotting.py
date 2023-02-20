@@ -130,3 +130,10 @@ def plotNonRBC(imagePath,annotatedPath):
     
     plt.imshow(image)
     plt.show()
+<<<<<<< HEAD
+=======
+    
+plotAll("input/training_images/0ca25c88-457f-4f03-bbc1-98fb6663f1d1.png","annotated_data/original_train_annotation.csv")
+plotRBCNonRBC("input/training_images/0ca25c88-457f-4f03-bbc1-98fb6663f1d1.png","annotated_data/train_annotation.csv")
+plotNonRBC("input/training_images/0ca25c88-457f-4f03-bbc1-98fb6663f1d1.png","annotated_data/train_annotation.csv")
+>>>>>>> master

@@ -36,6 +36,7 @@ if not os.path.exists('output/cell_images'):
 print("cropping cell images of each sample and storing...")
 
 # cropping non_rbc cells from images based on there bounding boxes
+
 for i in tqdm(range(df_non_rbc.shape[0])):
     bbox=df_non_rbc.iloc[i,2:].values
     im=Image.open(df_non_rbc.iloc[i,0])
