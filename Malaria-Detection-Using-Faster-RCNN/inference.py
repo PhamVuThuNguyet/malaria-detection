@@ -124,10 +124,5 @@ def inference(image_paths):
 
     return report
 
-<<<<<<< HEAD
-print(inference([args['imagePath']]))
-=======
 print(inference([args['imagePath']]))
 
-#print(inference(["input/training_images/0ca25c88-457f-4f03-bbc1-98fb6663f1d1.png"]))
->>>>>>> master
