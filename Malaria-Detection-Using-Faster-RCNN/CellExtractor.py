@@ -41,6 +41,5 @@ for i in tqdm(range(df_non_rbc.shape[0])):
     bbox=df_non_rbc.iloc[i,2:].values
     im=Image.open(df_non_rbc.iloc[i,0])
     im=im.crop(df_non_rbc.iloc[i,2:].values)
-
     im.save('output/cell_images_test/{}_{}.png'.format(i,df_non_rbc.iloc[i,1]))
 
