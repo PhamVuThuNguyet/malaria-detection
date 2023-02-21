@@ -15,3 +15,5 @@ Malaria-Detection-Using-Faster-Rcnn/output/records
 Malaria-Detection-Using-Faster-Rcnn/output/models/checkpoint
 Malaria-Detection-Using-Faster-Rcnn/output/models/saved_model/variables
 Malaria-Detection-Using-Faster-Rcnn/annotated_data
+pyvenv.cfg
+etc/jupyter
