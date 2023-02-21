@@ -21,10 +21,8 @@ import numpy as np
 from PIL import Image
 
 
-imagePaths = list(paths.list_images("output/cell_images"))
+imagePaths = list(paths.list_images("output/cell_images_test"))
 svc_model = joblib.load('output/models/model_SVC.pkl')
-
-print(svc_model.best_estimator_)
 
 efficientnet_model = EfficientNetV2L(weights="imagenet", include_top=False)
 
@@ -56,4 +54,4 @@ for i in imagePaths:
 final_targets = [classes.index(i) for i in targets]
 final_labels = [classes.index(i) for i in labels]
 
-print(classification_report(final_targets, final_labels, target_names=classes))
+print(classification_report(final_targets, final_labels, target_names=['gametocyte', 'ring', 'schizont', 'trophozoite']))
