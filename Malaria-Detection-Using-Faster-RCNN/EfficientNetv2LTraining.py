@@ -64,7 +64,7 @@ print(le.classes_)
 
 # hyper-parameter tuning parameters for logistic regression
 params = {"C": [10.0],
-          "gamma": [0.05, 0.1, 0.5]}
+          "gamma": [0.01, 0.001, 0.0001, 0.00001]}
 
 model = GridSearchCV(estimator=SVC(class_weight=weights,
                      verbose=1), param_grid=params, cv=5, verbose=2)
@@ -76,7 +76,7 @@ print("The best classifier is: ", model.best_estimator_)
 if not os.path.exists('output/models'):
     os.makedirs('output/models')
 # Save the model as a pickle in a file
-joblib.dump(model.best_estimator_, 'output/models/model_SVC.pkl')
+joblib.dump(model.best_estimator_, 'output/models/model_SVC_2.pkl')
 
 
 
