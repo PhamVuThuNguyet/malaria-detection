@@ -15,7 +15,10 @@ from sklearn.utils import class_weight
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import SVC
 
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, KFold
+
+from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+
 import joblib
 
 # it contains path for each image in our folder
@@ -63,20 +66,58 @@ labels = le.fit_transform(labels)
 print(le.classes_)
 
 # hyper-parameter tuning parameters for logistic regression
-params = {"C": [10.0],
-          "gamma": [0.01, 0.001, 0.0001, 0.00001]}
+# params = {"C": [10.0, 100.0, 1.0],
+#           "gamma": [0.00001]}
 
-model = GridSearchCV(estimator=SVC(class_weight=weights,
-                     verbose=1), param_grid=params, cv=5, verbose=2)
-model.fit(data, labels)
+# model = GridSearchCV(estimator=SVC(class_weight=weights,
+#                      verbose=1, break_ties=True), param_grid=params, cv=5, verbose=2, scoring="f1_macro")
 
-print(model.cv_results_)
-print("The best classifier is: ", model.best_estimator_)
+# model.fit(data, labels)
+# print(model.cv_results_)
+# print("The best classifier is: ", model.best_estimator_)
+
+
+model = SVC(class_weight= weights, probability=True, verbose = True, C=10.0, gamma=0.00001)
+
+kf = KFold(n_splits=10, shuffle=True, random_state=42)
+
+accuracies = np.empty((10, 1))
+f1_scores = np.empty((10, 1))
+x = 0
+
+for train_index, test_index in kf.split(data, labels):
+
+    X_train, X_test = data[train_index], data[test_index]
+    y_train, y_test = labels[train_index], labels[test_index]
+    
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    accuracies[x] = acc
+
+    f1 = f1_score(y_test, y_pred, average='macro')
+    f1_scores[x] = f1
+
+    print('Accuracy Score: {:.4f}'.format(acc))
+    print('SVC f1-score  : {:.4f}'.format(f1))
+    print('SVC precision : {:.4f}'.format(precision_score(y_test, y_pred, average='macro')))
+    print('SVC recall    : {:.4f}'.format(recall_score(y_test, y_pred, average='macro')))
+    print("\n", classification_report(y_test, y_pred, target_names=le.classes_))
+
+    x += 1
+
+print("%0.2f f1 score with a standard deviation of %0.2f" %
+      (f1_scores.mean(), f1_scores.std()))
+print("%0.2f accuracy with a standard deviation of %0.2f" %
+      (accuracies.mean(), accuracies.std()))
+
 
 if not os.path.exists('output/models'):
     os.makedirs('output/models')
 # Save the model as a pickle in a file
-joblib.dump(model.best_estimator_, 'output/models/model_SVC_2.pkl')
+# joblib.dump(model.best_estimator_, 'output/models/model_SVC_4.pkl')
+joblib.dump(model, 'output/models/model_SVC_4.pkl')
 
 
 
