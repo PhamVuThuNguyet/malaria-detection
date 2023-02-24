@@ -113,11 +113,11 @@ print("%0.2f accuracy with a standard deviation of %0.2f" %
       (accuracies.mean(), accuracies.std()))
 
 
-if not os.path.exists('output/models'):
-    os.makedirs('output/models')
+if not os.path.exists('output/models/EfficientNet-SVM'):
+    os.makedirs('output/models/EfficientNet-SVM')
 # Save the model as a pickle in a file
 # joblib.dump(model.best_estimator_, 'output/models/model_SVC_4.pkl')
-joblib.dump(model, 'output/models/model_SVC_4.pkl')
+joblib.dump(model, 'output/models/EfficientNet-SVM/model_SVC_4.pkl')
 
 
 
