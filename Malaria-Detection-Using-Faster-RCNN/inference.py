@@ -1,128 +1,72 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from imutils import paths 
-import os
-import random
-import matplotlib.image as mpimg
-from tqdm import tqdm
-from sklearn.externals import joblib 
-from matplotlib import patches
-from keras.applications import VGG16
-from keras.applications import imagenet_utils
-from object_detection.utils import label_map_util
-import tensorflow as tf
-from keras.models import load_model
-import imutils
-import cv2
 from PIL import Image
-import PIL.Image
-import argparse
+import matplotlib.pyplot as plt
+import matplotlib
+import tensorflow as tf
+from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as viz_utils
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-w", "--imagePath", required = True, help="Path of Blood Sample Image")
-args = vars(ap.parse_args())
+matplotlib.use('TkAgg')
 
-model="output/models/frozen_inference_graph.pb" #saved Faster-RCNN model graph
-labels_loc="output/records/classes.pbtxt" #saved classes files
-min_confidence=0.5
-num_classes=2
+def load_image_into_numpy_array(path):
+    """Load an image from file into a numpy array.
 
-colors=np.float64(np.array([[255,1,1],
-       [86, 1,255],
-       [1,231,255],
-       [1,255,61],
-       [214,255,1],
-       [255,120,1]]))
+    Puts image into numpy array to feed into tensorflow graph.
+    Note that by convention we put it into a numpy array with shape
+    (height, width, channels), where channels=3 for RGB.
 
-def inference(image_paths):
-    report = 'Negative'
-    lr_model= joblib.load('output/models/model_LR.pkl')  
-    model=tf.Graph()
-    with model.as_default():
-        graphDef=tf.GraphDef()
-        with tf.gfile.GFile("output/models/frozen_inference_graph.pb","rb") as f:
-            serializedGraph=f.read()
-            graphDef.ParseFromString(serializedGraph)
-            tf.import_graph_def(graphDef,name="")
+    Args:
+      path: the file path to the image
 
-    labelMap=label_map_util.load_labelmap(labels_loc)
-    categories=label_map_util.convert_label_map_to_categories(labelMap,max_num_classes=num_classes,use_display_name=True)
-    categoryIdx=label_map_util.create_category_index(categories)
-    classes=['gametocyte', 'leukocyte', 'ring', 'schizont', 'trophozoite']
-    predicition={}
-    with model.as_default():
-        with tf.Session(graph=model) as sess:
-            imageTensor=model.get_tensor_by_name("image_tensor:0")
-            boxesTensor=model.get_tensor_by_name("detection_boxes:0")
-            scoresTensor=model.get_tensor_by_name("detection_scores:0")
-            classesTensor=model.get_tensor_by_name("detection_classes:0")
-            numDetections=model.get_tensor_by_name("num_detections:0")
-            with tf.Session() as sess2:
-                vgg_model=VGG16(weights="imagenet", include_top=False)
-                for img in tqdm(image_paths):
-                # loading just 1 image for testing 
-                    image=cv2.imread(img)
-                    (H,W)= image.shape[:2]  
-                    output=image.copy()
-                    image=cv2.cvtColor(image.copy(),cv2.COLOR_BGR2RGB)
-                    image=np.expand_dims(image,axis=0)
-                    print("read image")
-                    (boxes,scores,labels,N)= sess.run([boxesTensor,scoresTensor,classesTensor,numDetections],feed_dict={imageTensor:image})
-                    boxes=np.squeeze(boxes)
-                    scores=np.squeeze(scores)
-                    labels=np.squeeze(labels)
-                    o=[]
-                    boxes_nm=[]
-                    print("started predicting classes")
-                    for (box,score,label) in zip(boxes,scores,labels):
-                        if score<0.4:
-                            continue
-                        (startY,startX,endY,endX)=box
-                        startX=int(startX*W)
-                        startY=int(startY*H)
-                        endX=int(endX*W)
-                        endY=int(endY*H)
-                        if categoryIdx[label]['name']=="non_rbc":
-                            b_box=[startX,startY,endX,endY]
-                            im=PIL.Image.open(img)
-                            cr_img=im.crop(b_box)
-                            cr_img=cr_img.resize((224,224))   
-                            data=np.array(cr_img)
-                            data=data[:,:,:3]
-                            data=np.expand_dims(data,axis=0)
-                            data=imagenet_utils.preprocess_input(data)
-                            data=vgg_model.predict(data)
-                            data=np.array(data)
-                            data=data.reshape(1,512*7*7)
-                            pred = lr_model.predict(data)
-                            label = classes[pred[0]]
-                            if label != 'leukocyte':
-                                report = 'Positive'
-                            cv2.rectangle(output,(startX,startY),(endX,endY),[0,0,255],3)
-                            y=startY-10 if startY-10>10 else startY+10 
-                            cv2.putText(output,label,(startX,y),cv2.FONT_HERSHEY_SIMPLEX,0.7,[0,0,255],2)
-                            if label in predicition:
-                                predicition[label]+=1
-                            else:
-                                predicition[label]=1
-                        else:
-                            label=categoryIdx[label]
-                            idx=int(label["id"])-1
-                            label=label['name']
-                            cv2.rectangle(output,(startX,startY),(endX,endY),[255,0,0],3)
-                            y=startY-10 if startY-10>10 else startY+10 
-                            cv2.putText(output,'rbc',(startX,y),cv2.FONT_HERSHEY_SIMPLEX,0.7,[255,0,0],2)
-                            if label in predicition:
-                                predicition[label]+=1
-                            else:
-                                predicition[label]=1
-            output = cv2.resize(output, (800, 600))  
-            cv2.imshow("output",output)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+    Returns:
+      uint8 numpy array with shape (img_height, img_width, 3)
+    """
+    return np.array(Image.open(path))
 
-    return report
+detect_fn = tf.saved_model.load("./output/models/frcnn_3/saved_model/")
+category_index = label_map_util.create_category_index_from_labelmap("./output/records/classes.pbtxt",
+                                                                    use_display_name=True)
 
-print(inference([args['imagePath']]))
+IMAGE_PATHS = ["./annotated_data/training_images/0d2aba33-6920-4001-bd54-59fe0bf9f50e.png"]
+for image_path in IMAGE_PATHS:
 
+    print('Running inference for {}... '.format(image_path), end='')
+
+    image_np = load_image_into_numpy_array(image_path)
+
+    # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
+    input_tensor = tf.convert_to_tensor(image_np)
+    # The model expects a batch of images, so add an axis with `tf.newaxis`.
+    input_tensor = input_tensor[tf.newaxis, ...]
+
+    # input_tensor = np.expand_dims(image_np, 0)
+    detections = detect_fn(input_tensor)
+
+    # All outputs are batches tensors.
+    # Convert to numpy arrays, and take index [0] to remove the batch dimension.
+    # We're only interested in the first num_detections.
+    num_detections = int(detections.pop('num_detections'))
+    detections = {key: value[0, :num_detections].numpy()
+                   for key, value in detections.items()}
+    detections['num_detections'] = num_detections
+
+    # detection_classes should be ints.
+    detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+
+    image_np_with_detections = image_np.copy()
+
+    viz_utils.visualize_boxes_and_labels_on_image_array(
+          image_np_with_detections,
+          detections['detection_boxes'],
+          detections['detection_classes'],
+          detections['detection_scores'],
+          category_index,
+          use_normalized_coordinates=True,
+          max_boxes_to_draw=200,
+          min_score_thresh=.50,
+          agnostic_mode=False)
+
+    plt.figure()
+    plt.imshow(image_np_with_detections)
+    print('Done')
+plt.show(block=True)
