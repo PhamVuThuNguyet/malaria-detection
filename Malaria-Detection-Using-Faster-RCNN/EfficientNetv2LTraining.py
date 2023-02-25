@@ -77,7 +77,7 @@ print(le.classes_)
 # print("The best classifier is: ", model.best_estimator_)
 
 
-model = SVC(class_weight= weights, probability=True, verbose = True, C=10.0, gamma=0.00001)
+model = SVC(class_weight= weights, break_ties=True, verbose = True, C=10.0, gamma=0.00001)
 
 kf = KFold(n_splits=10, shuffle=True, random_state=42)
 
