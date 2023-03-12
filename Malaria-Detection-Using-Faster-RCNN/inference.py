@@ -69,4 +69,5 @@ for image_path in IMAGE_PATHS:
     plt.figure()
     plt.imshow(image_np_with_detections)
     print('Done')
+    
 plt.show(block=True)

@@ -157,6 +157,7 @@ for img in tqdm(training_images):
     for (box, score, label) in zip(boxes, scores, labels):
         if score < min_confidence:
             continue
+
         (startY, startX, endY, endX) = box
 
         startX = int(startX*W)
@@ -168,11 +169,11 @@ for img in tqdm(training_images):
             predicted_boxes_stacked_train[img]['boxes'].append(
                 [startX, startY, endX, endY])
             predicted_boxes_stacked_train[img]['scores'].append(
-                score)
+                float(score))
         else:
             predicted_boxes_stacked_train[img]['boxes'] = [
                 [startX, startY, endX, endY]]
-            predicted_boxes_stacked_train[img]['scores'] = [score]
+            predicted_boxes_stacked_train[img]['scores'] = [float(score)]
 
         if categoryIdx[label]['name'] == "non_rbc":
 
@@ -232,4 +233,4 @@ print("Prediction for Finetuned EfficientNet::",
 
 import json
 with open('./output/records/predicted_boxes_stacked_train.json', 'w+') as fp:
-    json.dump(str(predicted_boxes_stacked_train), fp)
+    json.dump(predicted_boxes_stacked_train, fp, separators=(',', ':'), sort_keys=True, indent=4)
