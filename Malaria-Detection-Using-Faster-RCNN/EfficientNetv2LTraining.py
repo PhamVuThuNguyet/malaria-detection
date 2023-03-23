@@ -1,10 +1,12 @@
 import numpy as np
 import os
+
+import tensorflow as tf
+from tensorflow import keras
 from keras.applications import EfficientNetV2L
-
-from keras.applications import imagenet_utils
-
 from keras.utils import img_to_array, load_img
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
 
 import random
 from tqdm import tqdm
@@ -12,17 +14,46 @@ from tqdm import tqdm
 from imutils import paths
 
 from sklearn.utils import class_weight
-from sklearn.preprocessing import LabelEncoder
-from sklearn.svm import SVC
-
-from sklearn.model_selection import GridSearchCV, KFold
-
-from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 
 import joblib
 
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+
+def plot_hist_acc(hist):
+    plt.plot(hist.history["accuracy"])
+    plt.plot(hist.history["val_accuracy"])
+    plt.title("model accuracy")
+    plt.ylabel("accuracy")
+    plt.xlabel("epoch")
+    plt.legend(["train", "validation"], loc="upper left")
+    plt.show(block=True)
+
+
+def plot_hist_loss(hist):
+    plt.plot(hist.history["loss"])
+    plt.plot(hist.history["val_loss"])
+    plt.title("model loss")
+    plt.ylabel("loss")
+    plt.xlabel("epoch")
+    plt.legend(["train", "validation"], loc="upper left")
+    plt.show(block=True)
+
+
+img_augmentation = Sequential(
+    [
+        layers.RandomRotation(factor=0.15),
+        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
+        layers.RandomFlip(),
+        layers.RandomContrast(factor=0.1),
+    ],
+    name="img_augmentation",
+)
+
+
 # it contains path for each image in our folder
-imagePaths = list(paths.list_images("output/cell_images"))
+imagePaths = list(paths.list_images("./output/cell_images"))
 random.shuffle(imagePaths)
 
 # it will extract the labels from the path of each image
@@ -30,94 +61,92 @@ labels = [p.split(os.path.sep)[1].split('_')[1].split('.')[0]
           for p in imagePaths]
 classNames = [str(x) for x in np.unique(labels)]
 
-# loading the EfficientNetV2L pre-trained on imagenet network
-model = EfficientNetV2L(weights="imagenet", include_top=False)
-
-
-# list which will have 81,920 featurs for each image
-data = []
-for i in tqdm(imagePaths):
-    image = load_img(i, target_size=(256, 256))  # loading image by there paths
-    image = img_to_array(image)  # converting images into arrays
-    # inserting a new dimension because keras need extra dimensions
-    image = np.expand_dims(image, axis=0)
-    # preprocessing image according to imagenet data
-    image = imagenet_utils.preprocess_input(image)
-    features = model.predict(image)  # extracting those features from the model
-    data.append(features)  # appending features to the list
-
-data = np.array(data)  # converting list into array
-data = data.reshape(data.shape[0], 1280*8*8)
-
-print(model.summary())
-
-
-class_weights = class_weight.compute_class_weight(class_weight='balanced',
-                                                  classes=np.unique(labels),
-                                                  y=labels)
-weights = {}
-for i in range(5):
-    weights[i] = class_weights[i]
-
 # convert the labels from integers to vectors
 le = LabelEncoder()
 labels = le.fit_transform(labels)
 
+class_weights = class_weight.compute_class_weight(class_weight='balanced',
+                                                  classes=np.unique(labels),
+                                                  y=labels)
+
+
+onehot_encoder = OneHotEncoder(sparse=False)
+labels = labels.reshape(len(labels), 1)
+labels = onehot_encoder.fit_transform(labels)
+
+X = []
+for i in tqdm(imagePaths):
+    image = load_img(i, target_size=(256, 256))  # loading image by there paths
+    image = img_to_array(image)  # converting images into arrays
+    X.append(image)
+X = np.array(X)
+
+
+# loading the EfficientNetV2L pre-trained on imagenet network
+backbone = EfficientNetV2L(
+    include_top=False, weights="imagenet", input_shape=(256, 256, 3), pooling="max")
+backbone.trainable = False
+
+print(backbone.summary())
 print(le.classes_)
 
-# hyper-parameter tuning parameters for logistic regression
-# params = {"C": [10.0, 100.0, 1.0],
-#           "gamma": [0.00001]}
+inputs = layers.Input(shape=(256, 256, 3))
 
-# model = GridSearchCV(estimator=SVC(class_weight=weights,
-#                      verbose=1, break_ties=True), param_grid=params, cv=5, verbose=2, scoring="f1_macro")
+x = img_augmentation(inputs)
 
-# model.fit(data, labels)
-# print(model.cv_results_)
-# print("The best classifier is: ", model.best_estimator_)
+# We make sure that the base_model is running in inference mode here,
+# by passing `training=False`. This is important for fine-tuning, as you will
+# learn in a few paragraphs.
+x = backbone(x, training=False)
 
+# Rebuild top
+x = layers.GlobalAveragePooling2D(name="avg_pool")(x)
+x = layers.BatchNormalization()(x)
+top_dropout_rate = 0.2
+x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
+outputs = layers.Dense(5, activation="softmax")(x)
+model = keras.Model(inputs, outputs, name="EfficientNetv2L-transfer")
 
-model = SVC(class_weight= weights, break_ties=True, verbose = True, C=10.0, gamma=0.00001)
+model.compile(
+    optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+)
 
-kf = KFold(n_splits=10, shuffle=True, random_state=42)
+print(model.summary())
 
-accuracies = np.empty((10, 1))
-f1_scores = np.empty((10, 1))
-x = 0
+weights = {}
+for i in range(5):
+    weights[i] = class_weights[i]
 
-for train_index, test_index in kf.split(data, labels):
+hist = model.fit(x=X, y=labels, batch_size=8, epochs=100,
+                 validation_split=0.3, class_weight=weights, verbose=2)
 
-    X_train, X_test = data[train_index], data[test_index]
-    y_train, y_test = labels[train_index], labels[test_index]
-    
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-
-    acc = accuracy_score(y_test, y_pred)
-    accuracies[x] = acc
-
-    f1 = f1_score(y_test, y_pred, average='macro')
-    f1_scores[x] = f1
-
-    print('Accuracy Score: {:.4f}'.format(acc))
-    print('SVC f1-score  : {:.4f}'.format(f1))
-    print('SVC precision : {:.4f}'.format(precision_score(y_test, y_pred, average='macro')))
-    print('SVC recall    : {:.4f}'.format(recall_score(y_test, y_pred, average='macro')))
-    print("\n", classification_report(y_test, y_pred, target_names=le.classes_))
-
-    x += 1
-
-print("%0.2f f1 score with a standard deviation of %0.2f" %
-      (f1_scores.mean(), f1_scores.std()))
-print("%0.2f accuracy with a standard deviation of %0.2f" %
-      (accuracies.mean(), accuracies.std()))
+plot_hist_acc(hist)
+plot_hist_loss(hist)
 
 
-if not os.path.exists('output/models/EfficientNet-SVM'):
-    os.makedirs('output/models/EfficientNet-SVM')
-# Save the model as a pickle in a file
-# joblib.dump(model.best_estimator_, 'output/models/model_SVC_4.pkl')
-joblib.dump(model, 'output/models/EfficientNet-SVM/model_SVC_4.pkl')
+# Unfreeze the base model
+backbone.trainable = True
 
+# Keep freezing BatchNormalization
+for layer in model.layers[:]:
+        if isinstance(layer, layers.BatchNormalization):
+            layer.trainable = False
 
+# It's important to recompile your model after you make any changes
+# to the `trainable` attribute of any inner layer, so that your changes
+# are take into account
+model.compile(optimizer=keras.optimizers.Adam(1e-5),  # Very low learning rate
+              loss="categorical_crossentropy", metrics=["accuracy"])
 
+# Train end-to-end. Be careful to stop before you overfit!
+hist_2 = model.fit(x=X, y=labels, batch_size=16, epochs=10,  validation_split=0.3, class_weight=weights, verbose=2)
+plot_hist_acc(hist_2)
+plot_hist_loss(hist_2)
+
+if not os.path.exists('./output/models/EfficientNet'):
+    os.makedirs('./output/models/EfficientNet')
+
+model.save('./output/models/EfficientNet')
+
+joblib.dump(hist.history, 'output/models/EfficientNet/model_transfer_hist.pkl')
+joblib.dump(hist_2.history, 'output/models/EfficientNet/model_transfer_finetune_hist.pkl')
