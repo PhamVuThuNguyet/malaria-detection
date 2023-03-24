@@ -104,8 +104,8 @@ x = backbone(x, training=False)
 x = layers.BatchNormalization()(x)
 top_dropout_rate = 0.4
 x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-x = layers.Dense(64)(x)
-x = layers.Dropout(top_dropout_rate, name="top_dropout_2")(x)
+# x = layers.Dense(64)(x)
+# x = layers.Dropout(top_dropout_rate, name="top_dropout_2")(x)
 x = layers.Dense(128)(x)
 outputs = layers.Dense(5, activation="softmax")(x)
 model = keras.Model(inputs, outputs, name="EfficientNetv2L-transfer")
@@ -145,8 +145,10 @@ for layer in model.layers[:]:
 model.compile(optimizer=keras.optimizers.Adam(1e-5),  # Very low learning rate
               loss="categorical_crossentropy", metrics=["accuracy"])
 
+print(model.summary())
+
 # Train end-to-end. Be careful to stop before you overfit!
-hist_2 = model.fit(x=X, y=labels, batch_size=8, epochs=50,  validation_split=0.3, class_weight=weights, verbose=2)
+hist_2 = model.fit(x=X, y=labels, batch_size=8, epochs=100,  validation_split=0.3, class_weight=weights, verbose=2)
 plot_hist_acc(hist_2)
 plot_hist_loss(hist_2)
 
