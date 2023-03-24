@@ -100,10 +100,13 @@ x = img_augmentation(inputs)
 x = backbone(x, training=False)
 
 # Rebuild top
-x = layers.GlobalAveragePooling2D(name="avg_pool")(x)
+# x = layers.GlobalAveragePooling2D(name="avg_pool")(x)
 x = layers.BatchNormalization()(x)
-top_dropout_rate = 0.2
+top_dropout_rate = 0.4
 x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
+x = layers.Dense(64)(x)
+x = layers.Dropout(top_dropout_rate, name="top_dropout_2")(x)
+x = layers.Dense(128)(x)
 outputs = layers.Dense(5, activation="softmax")(x)
 model = keras.Model(inputs, outputs, name="EfficientNetv2L-transfer")
 
@@ -117,12 +120,16 @@ weights = {}
 for i in range(5):
     weights[i] = class_weights[i]
 
-hist = model.fit(x=X, y=labels, batch_size=8, epochs=100,
+hist = model.fit(x=X, y=labels, batch_size=8, epochs=200,
                  validation_split=0.3, class_weight=weights, verbose=2)
 
 plot_hist_acc(hist)
 plot_hist_loss(hist)
 
+if not os.path.exists('./output/models/EfficientNet/transfer'):
+    os.makedirs('./output/models/EfficientNet/transfer')
+
+model.save('./output/models/EfficientNet/transfer')
 
 # Unfreeze the base model
 backbone.trainable = True
@@ -139,14 +146,14 @@ model.compile(optimizer=keras.optimizers.Adam(1e-5),  # Very low learning rate
               loss="categorical_crossentropy", metrics=["accuracy"])
 
 # Train end-to-end. Be careful to stop before you overfit!
-hist_2 = model.fit(x=X, y=labels, batch_size=16, epochs=10,  validation_split=0.3, class_weight=weights, verbose=2)
+hist_2 = model.fit(x=X, y=labels, batch_size=8, epochs=50,  validation_split=0.3, class_weight=weights, verbose=2)
 plot_hist_acc(hist_2)
 plot_hist_loss(hist_2)
 
-if not os.path.exists('./output/models/EfficientNet'):
-    os.makedirs('./output/models/EfficientNet')
+if not os.path.exists('./output/models/EfficientNet/finetune'):
+    os.makedirs('./output/models/EfficientNet/finetune')
 
-model.save('./output/models/EfficientNet')
+model.save('./output/models/EfficientNet/finetune')
 
 joblib.dump(hist.history, 'output/models/EfficientNet/model_transfer_hist.pkl')
 joblib.dump(hist_2.history, 'output/models/EfficientNet/model_transfer_finetune_hist.pkl')
