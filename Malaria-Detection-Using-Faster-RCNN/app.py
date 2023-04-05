@@ -14,15 +14,17 @@ import tensorflow as tf
 import numpy as np
 import io
 import base64
+from flask_cors import CORS 
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/detect_objects', methods=['POST'])
 def detect_objects():
     # get the uploaded image file
     image_file = request.files['image']
-
+    print(image_file)
     # save the file to a temporary location on the server
     image_path = 'tmp/' + image_file.filename
     image_file.save(image_path)
