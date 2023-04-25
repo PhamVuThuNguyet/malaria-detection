@@ -26,7 +26,7 @@ imagePaths = list(paths.list_images("output/cell_images"))
 random.shuffle(imagePaths)
 
 # it will extract the labels from the path of each image
-labels = [p.split(os.path.sep)[1].split('_')[1].split('.')[0]
+labels = [p.split(os.path.sep)[-1].split('_')[1].split('.')[0]
           for p in imagePaths]
 classNames = [str(x) for x in np.unique(labels)]
 
@@ -77,7 +77,8 @@ print(le.classes_)
 # print("The best classifier is: ", model.best_estimator_)
 
 
-model = SVC(class_weight= weights, break_ties=True, verbose = True, C=10.0, gamma=0.00001)
+model = SVC(class_weight=weights, break_ties=True,
+            verbose=True, C=10.0, gamma=0.00001)
 
 kf = KFold(n_splits=10, shuffle=True, random_state=42)
 
@@ -89,7 +90,7 @@ for train_index, test_index in kf.split(data, labels):
 
     X_train, X_test = data[train_index], data[test_index]
     y_train, y_test = labels[train_index], labels[test_index]
-    
+
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
@@ -101,8 +102,10 @@ for train_index, test_index in kf.split(data, labels):
 
     print('Accuracy Score: {:.4f}'.format(acc))
     print('SVC f1-score  : {:.4f}'.format(f1))
-    print('SVC precision : {:.4f}'.format(precision_score(y_test, y_pred, average='macro')))
-    print('SVC recall    : {:.4f}'.format(recall_score(y_test, y_pred, average='macro')))
+    print('SVC precision : {:.4f}'.format(
+        precision_score(y_test, y_pred, average='macro')))
+    print('SVC recall    : {:.4f}'.format(
+        recall_score(y_test, y_pred, average='macro')))
     print("\n", classification_report(y_test, y_pred, target_names=le.classes_))
 
     x += 1
@@ -118,6 +121,3 @@ if not os.path.exists('output/models/EfficientNet-SVM'):
 # Save the model as a pickle in a file
 # joblib.dump(model.best_estimator_, 'output/models/model_SVC_4.pkl')
 joblib.dump(model, 'output/models/EfficientNet-SVM/model_SVC_4.pkl')
-
-
-

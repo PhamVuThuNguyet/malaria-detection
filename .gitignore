@@ -20,3 +20,4 @@ Malaria-Detection-Using-Faster-Rcnn/annotated_data
 pyvenv.cfg
 etc/jupyter
 
+tmp/

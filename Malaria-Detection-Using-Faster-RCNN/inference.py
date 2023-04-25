@@ -27,7 +27,7 @@ detect_fn = tf.saved_model.load("./output/models/frcnn_3/saved_model/")
 category_index = label_map_util.create_category_index_from_labelmap("./output/records/classes.pbtxt",
                                                                     use_display_name=True)
 
-IMAGE_PATHS = ["./annotated_data/training_images/0d2aba33-6920-4001-bd54-59fe0bf9f50e.png"]
+IMAGE_PATHS = ["./annotated_data/training_images/0d098413-6911-4535-b70a-3c3effd8cf49.png"]
 for image_path in IMAGE_PATHS:
 
     print('Running inference for {}... '.format(image_path), end='')
